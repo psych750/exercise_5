@@ -149,7 +149,7 @@ def get_keyboard_response(validResponses,duration=0):
             if responded:
                 break
     if not responded:
-        return ['*','*']
+        return ['NA','NA']
     else:
         return responded[0] #only get the first resp
 
