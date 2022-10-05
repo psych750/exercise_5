@@ -17,21 +17,20 @@ def create_directories(directories):
                 print("could not create", cur_directory)
 
  
-def import_trials(trialsFilename, colNames=None, separator='\t'):
-    try:
-        trialsFile = open(trialsFilename, 'rb')
-    except IOError:
-        print(trialsFilename, 'is not a valid file')
-    
-    if colNames is None: # Assume the first row contains the column names
-        colNames = trialsFile.next().rstrip().split(separator)
-    trialsList = []
-    for trialStr in trialsFile:
-        trialList = trialStr.rstrip().split(separator)
-        assert len(trialList) == len(colNames)
-        trialDict = dict(list(zip(colNames, trialList)))
-        trialsList.append(trialDict)
-    return trialsList
+def import_trials (trial_filename, col_names=None, separator=','):
+    trial_file = open(trial_filename, 'r')
+ 
+    if col_names is None:
+        # Assume the first row contains the column names
+        col_names = trial_file.readline().rstrip().split(separator)
+    trials_list = []
+    for cur_trial in trial_file:
+        cur_trial = cur_trial.rstrip().split(separator)
+        print(col_names, cur_trial, len(cur_trial), len(col_names))
+        assert len(cur_trial) == len(col_names) # make sure the number of column names = number of columns
+        trial_dict = dict(zip(col_names, cur_trial))
+        trials_list.append(trial_dict)
+    return trials_list
 
 
 
@@ -188,8 +187,8 @@ def write_to_file(fileHandle,trial,separator=',', sync=True,add_newline=False):
     except:
         print('file is not open for writing')
     if sync:
-    	fileHandle.flush()
-    	os.fsync(fileHandle)
+        fileHandle.flush()
+        os.fsync(fileHandle)
             
 
 
