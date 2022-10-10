@@ -104,16 +104,17 @@ def get_runtime_vars(varsToGet,order,expName):
         return varsToGet
     else: print('User Cancelled')
 
-def open_output_file(subjCode,suffix):
-    if  os.path.isfile(subjCode+'_'+suffix+'.txt'):
+def open_output_file(filename,suffix):
+    if  os.path.isfile(filename+suffix+'.csv'):
         popupError('Error: That subject code already exists')
         return False
     else:
         try:
-            outputFile = open(subjCode+'_'+suffix+'.txt','w')
+            outputFile = open(filename+suffix+'.csv','w')
         except:
-            print('could not open file for writing')
-        return outputFile
+            print(f'could not open {filename} for writing')
+            return False
+    return outputFile
 
 
 
