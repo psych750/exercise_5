@@ -60,7 +60,7 @@ def import_trials_with_header(trialsFilename, colNames=None, separator='\t', hea
         return trialList
 
 def basic_load_files(directory,extension,win='',restriction='*'):
-    """ Loads all the pictures (or narrowed by the restriction argumnt) in the provided directory.
+    """ Loads all the pictures (or narrowed by the restriction argument) in the provided directory.
     Need to pass in the Psychopy window (win) object so that it can be used for loading them in.
     Returns a dictionary with references to the loaded images
     """
@@ -104,17 +104,40 @@ def get_runtime_vars(varsToGet,order,expName):
         return varsToGet
     else: print('User Cancelled')
 
-def open_output_file(filename,suffix):
+
+create_dir()
+
+def open_data_file(filename,suffix=''):
     if  os.path.isfile(filename+suffix+'.csv'):
         popupError('Error: That subject code already exists')
         return False
     else:
         try:
-            outputFile = open(filename+suffix+'.csv','w')
+            os.mkdir('data')
+            print('Data directory did not exist. Created data/')
+        except FileExistsError:
+            pass
+        try:
+            data_file = open(filename+suffix+'.csv','w')
         except:
             print(f'could not open {filename} for writing')
             return False
-    return outputFile
+    return data_file
+
+
+def open_trial_file(filename,suffix=''):
+    try:
+        os.mkdir('trials')
+        print('Trials directory did not exist. Created trials/')
+    except FileExistsError:
+        pass
+    try:
+        output_file = open(filename+suffix+'.csv','w')
+    except:
+        print(f'could not open {filename} for writing')
+        return False
+    return output_file
+
 
 
 
@@ -131,6 +154,18 @@ def draw_and_show(win,stimuli,duration=0):
         win.flip()
         core.wait(duration)
     return
+
+def calculate_rectangular_coordinates(distanceX, distanceY, num_cols, num_rows, yOffset=0, xOffset=0):
+    coords = []
+    cur_obj=0
+    for cur_col in range(0,num_cols): #x-coord
+        for cur_row in range(0,num_rows): #y-coord
+            coords.append((cur_col*distanceX, cur_row*distanceY))
+            cur_obj+=1
+    xCorrected = max([coord[0] for coord in coords])/2 -xOffset
+    yCorrected = max([coord[1] for coord in coords])/2 -yOffset
+
+    return [(coord[0]-xCorrected, coord[1]-yCorrected) for coord in coords]
 
 
 def get_keyboard_response(validResponses,duration=0):
@@ -151,19 +186,18 @@ def get_keyboard_response(validResponses,duration=0):
     if not responded:
         return ['NA','NA']
     else:
-        return responded[0] #only get the first resp
-
+        return responded[0] #only get the first response
 
 
 def get_mouse_response(mouse,duration=0):
     event.clearEvents()
     responseTimer = core.Clock()
-    numButtons=len(event.mouseButtons)
-    response = [0]*numButtons
+    num_buttons=len(event.mouseButtons)
+    response = [0]*num_buttons
     timeElapsed = False
     mouse.clickReset()
     responseTimer.reset()
-    rt = '*'
+    rt = 'NA'
     while not any(response) and not timeElapsed:
         (response,rt) = mouse.getPressed(getTime=True)
         if duration>0 and responseTimer.getTime() > duration:
@@ -172,24 +206,24 @@ def get_mouse_response(mouse,duration=0):
     if not any(response): #if there was no response (would only happen if duration is set)
         return ('NA','NA')
     else:
-        nonZeroResponses = [x for x in rt if x>0]
-        firstResponseButtonIndex = rt.index(min(nonZeroResponses)) #only care about the first (earliest) click
-        return (firstResponseButtonIndex,rt[firstResponseButtonIndex])
+        non_zero_responses = [x for x in rt if x>0]
+        first_response_button_ndex = rt.index(min(non_zero_responses)) #only care about the first (earliest) click
+        return (first_response_button_ndex,rt[first_response_button_ndex])
 
 
-def write_to_file(fileHandle,trial,separator=',', sync=True,add_newline=False):
+def write_to_file(file_handle,trial,separator=',', sync=True,add_newline=False):
     """Writes a trial (array of lists) to a previously opened file"""
     trial = map(str,trial)
     line = separator.join([str(i) for i in trial]) #join with separator
     if add_newline:
         line += '\n' #add a newline
     try:
-        fileHandle.write(line)
+        file_handle.write(line)
     except:
         print('file is not open for writing')
     if sync:
-        fileHandle.flush()
-        os.fsync(fileHandle)
+        file_handle.flush()
+        os.fsync(file_handle)
             
 
 
@@ -208,20 +242,20 @@ def basic_load_files(directory,extension,win='',restriction='*'):
     return images
 
 
-def load_files(directory,extension,fileType,win='',whichFiles='*',stimList=[]):
+def load_files(directory,extension,fileType,win='',whichFiles='*',stim_list=[]):
     """ Load all the pics and sounds. Uses pyo or pygame for the sound library (see prefs.general['audioLib'])"""
     path = os.getcwd() #set path to current directory
     if isinstance(extension,list):
         fileList = []
-        for curExtension in extension:
-            fileList.extend(glob.glob(os.path.join(path,directory,whichFiles+curExtension)))
+        for cur_extension in extension:
+            fileList.extend(glob.glob(os.path.join(path,directory,whichFiles+cur_extension)))
     else:
         fileList = glob.glob(os.path.join(path,directory,whichFiles+extension))
     files_data = {} #initialize files_data  as a dict because it'll be accessed by file names (picture names, sound names)
-    for num,curFile in enumerate(fileList):
-        fullPath = curFile
+    for num,cur_file in enumerate(fileList):
+        fullPath = cur_file
         fullFileName = os.path.basename(fullPath)
-        stimFile = os.path.splitext(fullFileName)[0]
+        stim_file = os.path.splitext(fullFileName)[0]
         if fileType=="image":
             try:
                 surface = pygame.image.load(fullPath) #gets height/width of the image
@@ -231,22 +265,11 @@ def load_files(directory,extension,fileType,win='',whichFiles='*',stimList=[]):
                 pass
             stim = visual.ImageStim(win, image=fullPath,mask=None,interpolate=True)
             (width,height) = (stim.size[0],stim.size[1])
-            files_data[stimFile] = {'stim':stim,'fullPath':fullFileName,'filename':stimFile,'num':num,'width':width, 'height':height}
+            files_data[stim_file] = {'stim':stim,'fullPath':fullFileName,'filename':stim_file,'num':num,'width':width, 'height':height}
         elif fileType=="sound":
-            files_data[stimFile] = {'stim':sound.Sound(fullPath), 'duration':sound.Sound(fullPath).getDuration()}
+            files_data[stim_file] = {'stim':sound.Sound(fullPath), 'duration':sound.Sound(fullPath).getDuration()}
  
     #optionally check a list of desired stimuli against those that've been loaded
-    if stimList and set(files_data.keys()).intersection(stimList) != set(stimList):
-        popupError(str(set(stimList).difference(list(files_data.keys()))) + " does not exist in " + path+'\\'+directory) 
+    if stim_list and set(files_data.keys()).intersection(stim_list) != set(stim_list):
+        popupError(str(set(stim_list).difference(list(files_data.keys()))) + " does not exist in " + path+'\\'+directory) 
     return files_data
-    
-    
-    
-
-
-
-
-
-            
-            
-            
