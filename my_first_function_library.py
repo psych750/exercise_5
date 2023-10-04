@@ -105,18 +105,11 @@ def get_runtime_vars(varsToGet,order,expName):
     else: print('User Cancelled')
 
 
-create_dir()
-
-def open_data_file(filename,suffix=''):
-    if  os.path.isfile(filename+suffix+'.csv'):
+def open_data_file(filename,suffix='',check_if_exists=True):
+    if  check_if_exists and os.path.isfile(filename+suffix+'.csv'):
         popupError('Error: That subject code already exists')
         return False
     else:
-        try:
-            os.mkdir('data')
-            print('Data directory did not exist. Created data/')
-        except FileExistsError:
-            pass
         try:
             data_file = open(filename+suffix+'.csv','w')
         except:
@@ -125,18 +118,13 @@ def open_data_file(filename,suffix=''):
     return data_file
 
 
-def open_trial_file(filename,suffix=''):
+def open_trials_file(filename,suffix=''):
     try:
-        os.mkdir('trials')
-        print('Trials directory did not exist. Created trials/')
-    except FileExistsError:
-        pass
-    try:
-        output_file = open(filename+suffix+'.csv','w')
+        trials_file = open(filename+suffix+'.csv','w')
     except:
         print(f'could not open {filename} for writing')
         return False
-    return output_file
+    return trials_file
 
 
 
@@ -173,12 +161,12 @@ def get_keyboard_response(validResponses,duration=0):
     responded = False
     done = False
     rt = '*'
-    responseTimer = core.Clock()
+    response_timer = core.Clock()
     while True: 
         if not responded:
-            responded = event.getKeys(keyList=validResponses, timeStamped=responseTimer) 
+            responded = event.getKeys(keyList=validResponses, timeStamped=response_timer) 
         if duration>0:
-            if responseTimer.getTime() > duration:
+            if response_timer.getTime() > duration:
                 break
         else: #end on response
             if responded:
@@ -189,26 +177,25 @@ def get_keyboard_response(validResponses,duration=0):
         return responded[0] #only get the first response
 
 
-def get_mouse_response(mouse,duration=0):
+def get_mouse_response(mouse):
+    '''
+    Wait for and return a mouse response. Returns index of the mouse button pressed, position of the mouse
+    at time of press, and RT relative to start of call 
+    '''
     event.clearEvents()
-    responseTimer = core.Clock()
     num_buttons=len(event.mouseButtons)
-    response = [0]*num_buttons
-    timeElapsed = False
+    time_elapsed = False
     mouse.clickReset()
-    responseTimer.reset()
-    rt = 'NA'
-    while not any(response) and not timeElapsed:
-        (response,rt) = mouse.getPressed(getTime=True)
-        if duration>0 and responseTimer.getTime() > duration:
-            timeElapsed=True
-    
-    if not any(response): #if there was no response (would only happen if duration is set)
-        return ('NA','NA')
-    else:
-        non_zero_responses = [x for x in rt if x>0]
-        first_response_button_ndex = rt.index(min(non_zero_responses)) #only care about the first (earliest) click
-        return (first_response_button_ndex,rt[first_response_button_ndex])
+    i=0
+    while True:
+        i+=1
+        buttons, times = mouse.getPressed(getTime=True)
+        if any(buttons):
+            coord = mouse.getPos()
+            event.clearEvents()
+            mouse.clickReset()
+            break
+    return ((coord,times))
 
 
 def write_to_file(file_handle,trial,separator=',', sync=True,add_newline=False):
@@ -225,8 +212,6 @@ def write_to_file(file_handle,trial,separator=',', sync=True,add_newline=False):
         file_handle.flush()
         os.fsync(file_handle)
             
-
-
 def basic_load_files(directory,extension,win='',restriction='*'):
     """ Loads all the pictures (or narrowed by the restriction argumnt) in the provided directory.
     Need to pass in the Psychopy window (win) object so that it can be used for loading them in.
