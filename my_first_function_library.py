@@ -80,28 +80,28 @@ def popupError(text):
     errorDlg.show()
     
 
-def get_runtime_vars(varsToGet,order,expName):
+def get_runtime_vars(vars_to_get,order,exp_name):
     """Get run time variables, see http://www.psychopy.org/api/gui.html for explanation"""
-    order.append('expName')
-    varsToGet['expName']= expName
+    order.append('exp_name')
+    vars_to_get['exp_name']= exp_name
     try:
-        previousRunTime = misc.fromFile(expName+'_lastParams.psydat')
-        for curVar in list(previousRunTime.keys()):
-            if isinstance(varsToGet[curVar],list) or curVar=="room" or curVar=="date_time":
+        previous_runtime = misc.fromFile(exp_name+'_lastParams.psydat')
+        for cur_var in list(previous_runtime.keys()):
+            if isinstance(vars_to_get[cur_var],list) or cur_var=="date_time":
                 pass #don't load it in
             else:
-                varsToGet[curVar] = previousRunTime[curVar]
+                vars_to_get[cur_var] = previous_runtime[cur_var]
     except:
         pass
 
-    if 'room' in varsToGet and 'date_time' in varsToGet:
-        infoDlg = gui.DlgFromDict(dictionary=varsToGet, title=expName, fixed=['room','date_time'],order=order)
+    if 'date_time' in vars_to_get:
+        infoDlg = gui.DlgFromDict(dictionary=vars_to_get, title=exp_name, fixed=['date_time'],order=order)
     else:
-        infoDlg = gui.DlgFromDict(dictionary=varsToGet, title=expName, fixed=[expName],order=order)    
+        infoDlg = gui.DlgFromDict(dictionary=vars_to_get, title=exp_name, fixed=[exp_name],order=order)    
 
-    misc.toFile(expName+'_lastParams.psydat', varsToGet)
+    misc.toFile(exp_name+'_lastParams.psydat', vars_to_get)
     if infoDlg.OK:
-        return varsToGet
+        return vars_to_get
     else: print('User Cancelled')
 
 
