@@ -60,7 +60,7 @@ def show_trial(name):
         cur_pic.draw()
     win.flip()
     (coord,times) = get_mouse_response(myMouse)
-    RT = max(times) #because what's being returned is a list of RTs for each mouse button (left, middle, right)
+    RT = max(times)*1000 #getting largest value because what's being returned is a list of RTs for each mouse button (left, middle, right)
     image_clicked = which_image_clicked(coord,pics)
     is_correct = compute_accuracy(name_prompt,image_clicked)
     present_feedback(is_correct)
