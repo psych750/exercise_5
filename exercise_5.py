@@ -71,6 +71,7 @@ def show_trial(name):
     win.flip()
     return(trial_data)
     
-for i in range(10):
-    trial_data =show_trial(random.choice(sample_names)) #in the actual experimnt you're getting this info from the trial list
+
+for cur_name in sample_names:
+    trial_data =show_trial(cur_name) #in the actual experimnt you're getting this info from the trial list
     write_to_file(data_file,trial_data,add_newline=True)
