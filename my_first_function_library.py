@@ -39,26 +39,6 @@ def write_data(f,list_to_write,sep=","):
     f.write(string_to_write+'\n')
 
 
-def import_trials_with_header(trialsFilename, colNames=None, separator='\t', header=True,check_lengths=True):
-    try:
-        trialsFile = open(trialsFilename, 'r')
-    except IOError:
-        print(trialsFilename, 'is not a valid file')
-    
-    if colNames is None: # Assume the first row contains the column names
-        colNames = trialsFile.readline().rstrip().split(separator)
-    trialsList = []
-    for trialStr in trialsFile:
-        trialList = trialStr.rstrip().split(separator)
-        if check_lengths:
-            assert len(trialList) == len(colNames)
-        trialDict = dict(list(zip(colNames, trialList)))
-        trialsList.append(trialDict)
-    if header:
-        return (colNames, trialsList)
-    else:
-        return trialList
-
 def basic_load_files(directory,extension,win='',restriction='*'):
     """ Loads all the pictures (or narrowed by the restriction argument) in the provided directory.
     Need to pass in the Psychopy window (win) object so that it can be used for loading them in.
@@ -218,7 +198,7 @@ def basic_load_files(directory,extension,win='',restriction='*'):
     Returns a dictionary with references to the loaded images
     """
     file_list = glob.glob(os.path.join(directory,restriction+extension))
-    images = {} #initialize fileMatrix  as a dict because it'll be accessed by file names (picture names, sound names)
+    images = {} #initialize as a dict because it'll be accessed by file names (picture names, sound names)
     for cur_file in file_list:
         stim_filename = os.path.splitext(os.path.basename(cur_file))[0] #just the filename without the extension
         stim = visual.ImageStim(win, image=cur_file,mask=None,interpolate=True)
